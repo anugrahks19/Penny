@@ -2,6 +2,35 @@
 
 A personal expense tracker built with MongoDB, Express, React and Node.js. Add everyday expenses, update them, and see spending totals in a responsive dashboard.
 
+## Live demo and first visit
+
+| Part | Hosting | Link |
+| --- | --- | --- |
+| Frontend | Vercel | [Open Penny](https://pennymernstack.vercel.app) |
+| Backend API | Render | [Check backend health](https://penny-api-2lpj.onrender.com/api/health) |
+| Database | MongoDB Atlas | Accessed through the backend API |
+| Source code | GitHub | [anugrahks19/Penny](https://github.com/anugrahks19/Penny) |
+
+> **First visit:** The backend uses Render's free service, which sleeps after 15 minutes without incoming traffic. Its next request wakes it, which can take about a minute. Open the [backend health check](https://penny-api-2lpj.onrender.com/api/health) first and wait for the response below, then [open Penny](https://pennymernstack.vercel.app). See [Render's free-service documentation](https://render.com/docs/free).
+
+Expected health response:
+
+```json
+{"status":"ok","app":"Penny"}
+```
+
+For evaluation:
+
+1. Open the health-check link and wait for the JSON response. This checks API availability; it does not independently test database access.
+2. Open the Vercel frontend. If it was already open while the backend was waking, click **Try again** after the health check responds. The frontend request can time out before a sleeping backend finishes starting.
+3. Add an expense with a title, positive amount, category and date. Confirm the new row and total appear immediately.
+4. Refresh the page to verify the expense was stored in Atlas.
+5. Edit the expense and confirm its row and total update.
+6. Try cancelling a deletion, then confirm deletion and check the total again.
+
+The Render root URL returns `{"message":"Route not found."}` because no page is registered at `/`. Use `/api/health` for the health check and the Vercel link for the application. Expenses are stored in Atlas rather than Render's local filesystem.
+
+
 ## What works
 
 - Create, read, edit and delete expenses through the Express API and MongoDB.
@@ -68,6 +97,41 @@ npm run dev
 ```
 
 If you change the API port, update the proxy target in `frontend/vite.config.js`. If you change the frontend origin, update `CLIENT_ORIGIN` in the backend. For a separately hosted frontend, set `VITE_API_URL` to the full backend API URL and rebuild.
+
+## Hosted deployment setup
+
+Penny's React frontend is hosted on Vercel. Browser requests go to the Express API on Render, which reads and writes expenses in MongoDB Atlas.
+
+### Backend on Render
+
+Create a Node Web Service connected to this repository's `main` branch:
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | Leave blank so the backend can import `shared/` |
+| Build Command | `npm ci --prefix backend --omit=dev` |
+| Start Command | `npm start --prefix backend` |
+| Health Check Path | `/api/health` |
+| Node version | `24.12.0` |
+
+Set `MONGODB_URI` to the exam-only Atlas connection string, `NODE_VERSION` to `24.12.0`, and `CLIENT_ORIGIN` to `https://pennymernstack.vercel.app`. Let Render supply `PORT`. Allow the backend service's outbound IP ranges in Atlas Network Access. These ranges are shown under **Connect → Outbound** on the Render service page. Save the settings, deploy, and check the health endpoint before opening the frontend.
+
+### Frontend on Vercel
+
+Import the same GitHub repository with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Framework | Vite |
+| Root Directory | `frontend` |
+| Install Command | `npm ci --include=dev` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| `VITE_API_URL` | `https://penny-api-2lpj.onrender.com/api` |
+
+Enable inclusion of source files outside the root directory for the build so Vite can import `shared/expenseRules.mjs`. Keep the MongoDB connection string on the backend; Vercel needs only the public API URL. Redeploy the frontend after changing `VITE_API_URL` because Vite embeds it during the build.
+
+If the frontend domain changes, update Render's `CLIENT_ORIGIN` to the new origin without a trailing slash and redeploy the backend. Check add, refresh, edit and delete through the deployed frontend after configuration changes.
 
 ## Verification
 
@@ -140,25 +204,18 @@ shared/
 ## Troubleshooting
 
 - Connection failure: verify the cluster is available, the database user/password is correct, your IP is allowed and the URI has no placeholders. Check special-character encoding and internet access.
-- Cannot reach Penny: run the backend, then retry. Confirm the API port matches the Vite proxy.
+- Hosted first visit or Cannot reach Penny: open the Render health check, wait for it to respond, then click Try again in the frontend. For local development, run the backend and confirm the API port matches the Vite proxy.
 - Port 5173 in use: stop the other app using it before starting Penny.
 - Changes to environment files: restart the backend; restart Vite after changing frontend environment values.
 - Fonts unavailable: the interface uses system sans-serif fallbacks and remains usable.
 
-## GitHub submission
+## Submission
 
-From the project root, create a real repository and push it to your own GitHub repository:
+Repository: [https://github.com/anugrahks19/Penny](https://github.com/anugrahks19/Penny)
 
-```sh
-git init
-git add .
-git commit -m "Build Penny expense tracker"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/penny.git
-git push -u origin main
-```
+Live frontend: [https://pennymernstack.vercel.app](https://pennymernstack.vercel.app)
 
-Do not include `node_modules`. Both frontend and backend `.env` files are intentionally not ignored to match the exam instruction. Before submitting, verify only disposable credentials are included, open the repository link to confirm evaluator access and follow the setup steps from a fresh clone.
+Submit the repository URL as requested by the assessment. The complete project includes `frontend/`, `backend/`, `shared/`, the package manifests and lockfiles, and both required `.env` files. Only disposable exam credentials should be published. Dependencies, build output, local skills and verification artifacts are excluded by `.gitignore`.
 
 ## Browser checks
 
