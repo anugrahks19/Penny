@@ -1,0 +1,16 @@
+{
+  "name": "penny",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "setup": "npm install --prefix backend && npm install --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "test:ui": "playwright test",
+    "check:atlas": "npm run check:atlas --prefix backend"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "concurrently": "^9.2.1"
+  }
+}
